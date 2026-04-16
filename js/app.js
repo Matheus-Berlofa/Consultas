@@ -16,9 +16,9 @@ import {
 
 let chart;
 let userAtual = null;
+let filtroAtual = "";
 
-
-// VERIFICA LOGIN
+// 🔐 VERIFICA LOGIN
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "login.html";
@@ -26,16 +26,16 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   userAtual = user;
-
-  await carregarDados(); // garante execução correta
+  await carregarDados();
 });
-// LOGOUT
+
+// 🚪 LOGOUT
 document.getElementById("logoutBtn").addEventListener("click", () => {
   signOut(auth);
   window.location.href = "login.html";
 });
 
-// SALVAR DADOS
+// 💾 SALVAR DADOS
 document.getElementById("formEvolucao").addEventListener("submit", async function (e) {
   e.preventDefault();
 
@@ -63,14 +63,32 @@ document.getElementById("formEvolucao").addEventListener("submit", async functio
   }
 });
 
-// CARREGAR DADOS
+// 🔍 FILTRO BOTÃO
+document.getElementById("btnFiltrar").addEventListener("click", () => {
+  filtroAtual = document.getElementById("filtroPaciente").value.toLowerCase();
+  carregarDados();
+});
+
+// 🔄 LIMPAR FILTRO
+document.getElementById("btnLimpar").addEventListener("click", () => {
+  filtroAtual = "";
+  document.getElementById("filtroPaciente").value = "";
+  carregarDados();
+});
+
+// 🔥 FILTRO AUTOMÁTICO
+document.getElementById("filtroPaciente").addEventListener("input", (e) => {
+  filtroAtual = e.target.value.toLowerCase();
+  carregarDados();
+});
+
+// 📊 CARREGAR DADOS
 async function carregarDados() {
   if (!userAtual) return;
 
   const tabela = document.getElementById("tabelaDados");
   tabela.innerHTML = "";
 
-  let filtroAtual = "";
   let total = 0;
   let soma = 0;
   let melhoras = 0;
@@ -81,15 +99,20 @@ async function carregarDados() {
 
   try {
     const q = query(
-     collection(db, "evolucoes"),
-     where("userId", "==", userAtual.uid),
-     orderBy("data")
+      collection(db, "evolucoes"),
+      where("userId", "==", userAtual.uid),
+      orderBy("data")
     );
 
     const querySnapshot = await getDocs(q);
 
     querySnapshot.forEach((doc) => {
       const d = doc.data();
+
+      // 🔍 FILTRO POR PACIENTE
+      if (filtroAtual && !d.paciente.toLowerCase().includes(filtroAtual)) {
+        return;
+      }
 
       tabela.innerHTML += `
         <tr>
@@ -111,7 +134,7 @@ async function carregarDados() {
       valores.push(d.status === "melhora" ? d.nota : -d.nota);
     });
 
-    // Atualiza métricas
+    // DASHBOARD
     document.getElementById("total").innerText = total;
     document.getElementById("media").innerText = total ? (soma / total).toFixed(1) : 0;
     document.getElementById("melhoras").innerText = melhoras;
@@ -124,15 +147,7 @@ async function carregarDados() {
   }
 }
 
-  // DASHBOARD
-  document.getElementById("total").innerText = total;
-  document.getElementById("media").innerText = total ? (soma / total).toFixed(1) : 0;
-  document.getElementById("melhoras").innerText = melhoras;
-  document.getElementById("pioras").innerText = pioras;
-
-  atualizarGrafico(labels, valores);
-
-// GRÁFICO
+// 📈 GRÁFICO
 function atualizarGrafico(labels, valores) {
   const ctx = document.getElementById("grafico").getContext("2d");
 
