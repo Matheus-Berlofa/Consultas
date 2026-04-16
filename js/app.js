@@ -18,6 +18,7 @@ let userAtual;
 let chart;
 let filtroAtual = "";
 let periodo = "dia";
+let pacienteSelecionado = "";
 
 // LOGIN
 onAuthStateChanged(auth, async (user) => {
@@ -55,7 +56,13 @@ document.getElementById("formEvolucao").addEventListener("submit", async (e) => 
   e.target.reset();
 });
 
-// FILTRO
+// SELECT PACIENTE
+document.getElementById("selectPaciente").addEventListener("change", (e) => {
+  pacienteSelecionado = e.target.value.toLowerCase();
+  carregarDados();
+});
+
+// FILTRO TEXTO
 document.getElementById("filtroPaciente").addEventListener("input", (e) => {
   filtroAtual = e.target.value.toLowerCase();
   carregarDados();
@@ -104,6 +111,18 @@ function agruparDados(dados) {
   };
 }
 
+// PREENCHER SELECT
+function preencherPacientes(lista) {
+  const select = document.getElementById("selectPaciente");
+  const nomes = [...new Set(lista.map(d => d.paciente))];
+
+  select.innerHTML = `<option value="">Todos os pacientes</option>`;
+
+  nomes.forEach(nome => {
+    select.innerHTML += `<option value="${nome}">${nome}</option>`;
+  });
+}
+
 // CARREGAR
 async function carregarDados() {
   const tabela = document.getElementById("tabelaDados");
@@ -112,6 +131,7 @@ async function carregarDados() {
   let total = 0, soma = 0, melhoras = 0, pioras = 0;
   let dadosBrutos = [];
   let ultimo = {};
+  let todos = [];
 
   const q = query(
     collection(db, "evolucoes"),
@@ -124,7 +144,9 @@ async function carregarDados() {
 
   snapshot.forEach(doc => {
     const d = doc.data();
+    todos.push(d);
 
+    if (pacienteSelecionado && d.paciente.toLowerCase() !== pacienteSelecionado) return;
     if (filtroAtual && !d.paciente.toLowerCase().includes(filtroAtual)) return;
 
     let status = "—";
@@ -150,7 +172,6 @@ async function carregarDados() {
 
     total++;
     soma += d.nota;
-
     if (status === "Melhora") melhoras++;
     if (status === "Piora") pioras++;
 
@@ -160,6 +181,8 @@ async function carregarDados() {
              status === "Piora" ? -d.nota : 0
     });
   });
+
+  preencherPacientes(todos);
 
   document.getElementById("total").innerText = total;
   document.getElementById("media").innerText = total ? (soma/total).toFixed(1) : 0;
