@@ -5,8 +5,8 @@ import {
   addDoc,
   getDocs,
   query,
-  orderBy,
-  where
+  where,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
@@ -14,11 +14,12 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+let userAtual;
 let chart;
-let userAtual = null;
 let filtroAtual = "";
+let periodo = "dia";
 
-// 🔐 VERIFICA LOGIN
+// LOGIN
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "login.html";
@@ -26,17 +27,17 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   userAtual = user;
-  await carregarDados();
+  carregarDados();
 });
 
-// 🚪 LOGOUT
+// LOGOUT
 document.getElementById("logoutBtn").addEventListener("click", () => {
   signOut(auth);
   window.location.href = "login.html";
 });
 
-// 💾 SALVAR DADOS
-document.getElementById("formEvolucao").addEventListener("submit", async function (e) {
+// SALVAR
+document.getElementById("formEvolucao").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const paciente = document.getElementById("paciente").value;
@@ -45,111 +46,123 @@ document.getElementById("formEvolucao").addEventListener("submit", async functio
   const nota = parseInt(document.getElementById("nota").value);
   const obs = document.getElementById("obs").value;
 
-  try {
-    await addDoc(collection(db, "evolucoes"), {
-      userId: userAtual.uid,
-      paciente,
-      data,
-      status,
-      nota,
-      obs
-    });
+  await addDoc(collection(db, "evolucoes"), {
+    userId: userAtual.uid,
+    paciente,
+    data,
+    status,
+    nota,
+    obs
+  });
 
-    carregarDados();
-    this.reset();
-
-  } catch (erro) {
-    alert("Erro: " + erro.message);
-  }
+  carregarDados();
+  e.target.reset();
 });
 
-// 🔍 FILTRO BOTÃO
-document.getElementById("btnFiltrar").addEventListener("click", () => {
-  filtroAtual = document.getElementById("filtroPaciente").value.toLowerCase();
+// FILTRO
+document.getElementById("filtroPaciente").addEventListener("input", (e) => {
+  filtroAtual = e.target.value.toLowerCase();
   carregarDados();
 });
 
-// 🔄 LIMPAR FILTRO
 document.getElementById("btnLimpar").addEventListener("click", () => {
   filtroAtual = "";
   document.getElementById("filtroPaciente").value = "";
   carregarDados();
 });
 
-// 🔥 FILTRO AUTOMÁTICO
-document.getElementById("filtroPaciente").addEventListener("input", (e) => {
-  filtroAtual = e.target.value.toLowerCase();
+// PERÍODO
+window.mudarPeriodo = function(p) {
+  periodo = p;
   carregarDados();
-});
+};
 
-// 📊 CARREGAR DADOS
+// AGRUPAMENTO
+function agruparDados(dados) {
+  const grupos = {};
+
+  dados.forEach(d => {
+    let chave;
+    const data = new Date(d.data);
+
+    if (periodo === "semana") {
+      const semana = Math.ceil(data.getDate() / 7);
+      chave = `S${semana}/${data.getMonth()+1}`;
+    } else if (periodo === "mes") {
+      chave = `${data.getMonth()+1}/${data.getFullYear()}`;
+    } else {
+      chave = d.data;
+    }
+
+    if (!grupos[chave]) {
+      grupos[chave] = { soma: 0, count: 0 };
+    }
+
+    grupos[chave].soma += (d.status === "melhora" ? d.nota : -d.nota);
+    grupos[chave].count++;
+  });
+
+  const labels = [];
+  const valores = [];
+
+  for (let key in grupos) {
+    labels.push(key);
+    valores.push(grupos[key].soma / grupos[key].count);
+  }
+
+  return { labels, valores };
+}
+
+// CARREGAR DADOS
 async function carregarDados() {
-  if (!userAtual) return;
-
   const tabela = document.getElementById("tabelaDados");
   tabela.innerHTML = "";
 
-  let total = 0;
-  let soma = 0;
-  let melhoras = 0;
-  let pioras = 0;
+  let total = 0, soma = 0, melhoras = 0, pioras = 0;
+  let dadosBrutos = [];
 
-  let labels = [];
-  let valores = [];
+  const q = query(
+    collection(db, "evolucoes"),
+    where("userId", "==", userAtual.uid),
+    orderBy("data")
+  );
 
-  try {
-    const q = query(
-      collection(db, "evolucoes"),
-      where("userId", "==", userAtual.uid),
-      orderBy("data")
-    );
+  const snapshot = await getDocs(q);
 
-    const querySnapshot = await getDocs(q);
+  snapshot.forEach(doc => {
+    const d = doc.data();
 
-    querySnapshot.forEach((doc) => {
-      const d = doc.data();
+    if (filtroAtual && !d.paciente.toLowerCase().includes(filtroAtual)) return;
 
-      // 🔍 FILTRO POR PACIENTE
-      if (filtroAtual && !d.paciente.toLowerCase().includes(filtroAtual)) {
-        return;
-      }
+    tabela.innerHTML += `
+      <tr>
+        <td>${d.paciente}</td>
+        <td>${d.data}</td>
+        <td>${d.status}</td>
+        <td>${d.nota}</td>
+        <td>${d.obs}</td>
+      </tr>
+    `;
 
-      tabela.innerHTML += `
-        <tr>
-          <td>${d.paciente}</td>
-          <td>${d.data}</td>
-          <td>${d.status}</td>
-          <td>${d.nota}</td>
-          <td>${d.obs}</td>
-        </tr>
-      `;
+    total++;
+    soma += d.nota;
+    d.status === "melhora" ? melhoras++ : pioras++;
 
-      total++;
-      soma += Number(d.nota);
+    dadosBrutos.push(d);
+  });
 
-      if (d.status === "melhora") melhoras++;
-      else pioras++;
+  document.getElementById("total").innerText = total;
+  document.getElementById("media").innerText = total ? (soma/total).toFixed(1) : 0;
+  document.getElementById("melhoras").innerText = melhoras;
+  document.getElementById("pioras").innerText = pioras;
 
-      labels.push(d.data);
-      valores.push(d.status === "melhora" ? d.nota : -d.nota);
-    });
-
-    // DASHBOARD
-    document.getElementById("total").innerText = total;
-    document.getElementById("media").innerText = total ? (soma / total).toFixed(1) : 0;
-    document.getElementById("melhoras").innerText = melhoras;
-    document.getElementById("pioras").innerText = pioras;
-
-    atualizarGrafico(labels, valores);
-
-  } catch (erro) {
-    console.error("Erro ao carregar dados:", erro);
-  }
+  const { labels, valores } = agruparDados(dadosBrutos);
+  atualizarGrafico(labels, valores);
 }
 
-// 📈 GRÁFICO
+// GRÁFICO
 function atualizarGrafico(labels, valores) {
-  const ctx = document.getElementById("grafico").getContext("2d");
+  const ctx = document.getElementById("grafico");
 
   if (chart) chart.destroy();
 
@@ -160,7 +173,6 @@ function atualizarGrafico(labels, valores) {
       datasets: [{
         label: "Evolução",
         data: valores,
-        borderWidth: 2,
         tension: 0.3
       }]
     }
