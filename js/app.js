@@ -64,47 +64,63 @@ document.getElementById("formEvolucao").addEventListener("submit", async functio
 
 // CARREGAR DADOS
 async function carregarDados() {
+  if (!userAtual) return;
+
   const tabela = document.getElementById("tabelaDados");
   tabela.innerHTML = "";
-
-  const q = query(
-    collection(db, "evolucoes"),
-    where("userId", "==", userAtual.uid),
-    orderBy("data")
-  );
-
-  const querySnapshot = await getDocs(q);
-
-  let labels = [];
-  let valores = [];
 
   let total = 0;
   let soma = 0;
   let melhoras = 0;
   let pioras = 0;
 
-  querySnapshot.forEach((doc) => {
-    const d = doc.data();
+  let labels = [];
+  let valores = [];
 
-    tabela.innerHTML += `
-      <tr>
-        <td>${d.paciente}</td>
-        <td>${d.data}</td>
-        <td>${d.status}</td>
-        <td>${d.nota}</td>
-        <td>${d.obs}</td>
-      </tr>
-    `;
+  try {
+    const q = query(
+      collection(db, "evolucoes"),
+      where("userId", "==", userAtual.uid),
+      orderBy("data")
+    );
 
-    total++;
-    soma += d.nota;
+    const querySnapshot = await getDocs(q);
 
-    if (d.status === "melhora") melhoras++;
-    else pioras++;
+    querySnapshot.forEach((doc) => {
+      const d = doc.data();
 
-    labels.push(d.data);
-    valores.push(d.status === "melhora" ? d.nota : -d.nota);
-  });
+      tabela.innerHTML += `
+        <tr>
+          <td>${d.paciente}</td>
+          <td>${d.data}</td>
+          <td>${d.status}</td>
+          <td>${d.nota}</td>
+          <td>${d.obs}</td>
+        </tr>
+      `;
+
+      total++;
+      soma += Number(d.nota);
+
+      if (d.status === "melhora") melhoras++;
+      else pioras++;
+
+      labels.push(d.data);
+      valores.push(d.status === "melhora" ? d.nota : -d.nota);
+    });
+
+    // Atualiza métricas
+    document.getElementById("total").innerText = total;
+    document.getElementById("media").innerText = total ? (soma / total).toFixed(1) : 0;
+    document.getElementById("melhoras").innerText = melhoras;
+    document.getElementById("pioras").innerText = pioras;
+
+    atualizarGrafico(labels, valores);
+
+  } catch (erro) {
+    console.error("Erro ao carregar dados:", erro);
+  }
+}
 
   // DASHBOARD
   document.getElementById("total").innerText = total;
