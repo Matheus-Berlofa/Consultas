@@ -21,11 +21,7 @@ let periodo = "dia";
 
 // LOGIN
 onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
-
+  if (!user) return window.location.href = "login.html";
   userAtual = user;
   carregarDados();
 });
@@ -42,7 +38,7 @@ document.getElementById("formEvolucao").addEventListener("submit", async (e) => 
 
   const paciente = document.getElementById("paciente").value;
   const data = document.getElementById("data").value;
-  const status = document.getElementById("status").value;
+  const hora = document.getElementById("hora").value;
   const nota = parseInt(document.getElementById("nota").value);
   const obs = document.getElementById("obs").value;
 
@@ -50,7 +46,7 @@ document.getElementById("formEvolucao").addEventListener("submit", async (e) => 
     userId: userAtual.uid,
     paciente,
     data,
-    status,
+    hora,
     nota,
     obs
   });
@@ -91,40 +87,37 @@ function agruparDados(dados) {
     } else if (periodo === "mes") {
       chave = `${data.getMonth()+1}/${data.getFullYear()}`;
     } else {
-      chave = d.data;
+      chave = `${d.data} ${d.hora}`;
     }
 
     if (!grupos[chave]) {
       grupos[chave] = { soma: 0, count: 0 };
     }
 
-    grupos[chave].soma += (d.status === "melhora" ? d.nota : -d.nota);
+    grupos[chave].soma += d.valor;
     grupos[chave].count++;
   });
 
-  const labels = [];
-  const valores = [];
-
-  for (let key in grupos) {
-    labels.push(key);
-    valores.push(grupos[key].soma / grupos[key].count);
-  }
-
-  return { labels, valores };
+  return {
+    labels: Object.keys(grupos),
+    valores: Object.values(grupos).map(g => g.soma / g.count)
+  };
 }
 
-// CARREGAR DADOS
+// CARREGAR
 async function carregarDados() {
   const tabela = document.getElementById("tabelaDados");
   tabela.innerHTML = "";
 
   let total = 0, soma = 0, melhoras = 0, pioras = 0;
   let dadosBrutos = [];
+  let ultimo = {};
 
   const q = query(
     collection(db, "evolucoes"),
     where("userId", "==", userAtual.uid),
-    orderBy("data")
+    orderBy("data"),
+    orderBy("hora")
   );
 
   const snapshot = await getDocs(q);
@@ -134,21 +127,38 @@ async function carregarDados() {
 
     if (filtroAtual && !d.paciente.toLowerCase().includes(filtroAtual)) return;
 
+    let status = "—";
+
+    if (ultimo[d.paciente] !== undefined) {
+      if (d.nota > ultimo[d.paciente]) status = "Melhora";
+      else if (d.nota < ultimo[d.paciente]) status = "Piora";
+      else status = "Estável";
+    }
+
+    ultimo[d.paciente] = d.nota;
+
     tabela.innerHTML += `
       <tr>
         <td>${d.paciente}</td>
         <td>${d.data}</td>
-        <td>${d.status}</td>
+        <td>${d.hora}</td>
         <td>${d.nota}</td>
+        <td>${status}</td>
         <td>${d.obs}</td>
       </tr>
     `;
 
     total++;
     soma += d.nota;
-    d.status === "melhora" ? melhoras++ : pioras++;
 
-    dadosBrutos.push(d);
+    if (status === "Melhora") melhoras++;
+    if (status === "Piora") pioras++;
+
+    dadosBrutos.push({
+      ...d,
+      valor: status === "Melhora" ? d.nota :
+             status === "Piora" ? -d.nota : 0
+    });
   });
 
   document.getElementById("total").innerText = total;
