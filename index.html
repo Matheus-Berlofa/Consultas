@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Evolução de Pacientes</title>
   <link rel="stylesheet" href="css/style.css">
-
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -14,48 +13,24 @@
   <button id="logoutBtn">Sair</button>
 </header>
 
-<!-- DASHBOARD -->
 <section class="dashboard">
-  <div class="card">
-    <h3>Total</h3>
-    <p id="total">0</p>
-  </div>
-
-  <div class="card">
-    <h3>Média</h3>
-    <p id="media">0</p>
-  </div>
-
-  <div class="card">
-    <h3>Melhoras</h3>
-    <p id="melhoras">0</p>
-  </div>
-
-  <div class="card">
-    <h3>Pioras</h3>
-    <p id="pioras">0</p>
-  </div>
+  <div class="card"><h3>Total</h3><p id="total">0</p></div>
+  <div class="card"><h3>Média</h3><p id="media">0</p></div>
+  <div class="card"><h3>Melhoras</h3><p id="melhoras">0</p></div>
+  <div class="card"><h3>Pioras</h3><p id="pioras">0</p></div>
 </section>
 
-<!-- FORM -->
 <section class="form-container">
   <form id="formEvolucao">
     <input type="text" id="paciente" placeholder="Paciente" required>
     <input type="date" id="data" required>
-
-    <select id="status">
-      <option value="melhora">Melhora</option>
-      <option value="piora">Piora</option>
-    </select>
-
+    <input type="time" id="hora" required>
     <input type="number" id="nota" min="0" max="10" placeholder="Nota" required>
     <textarea id="obs" placeholder="Observações"></textarea>
-
     <button type="submit">Salvar</button>
   </form>
 </section>
 
-<!-- FILTRO -->
 <section>
   <div class="filtro">
     <input type="text" id="filtroPaciente" placeholder="Buscar paciente...">
@@ -63,15 +38,15 @@
   </div>
 </section>
 
-<!-- TABELA -->
 <section>
   <table>
     <thead>
       <tr>
         <th>Paciente</th>
         <th>Data</th>
-        <th>Status</th>
+        <th>Hora</th>
         <th>Nota</th>
+        <th>Status</th>
         <th>Obs</th>
       </tr>
     </thead>
@@ -79,7 +54,6 @@
   </table>
 </section>
 
-<!-- CONTROLE DE PERÍODO -->
 <section>
   <div class="filtro-periodo">
     <button onclick="mudarPeriodo('dia')">Diário</button>
@@ -88,7 +62,6 @@
   </div>
 </section>
 
-<!-- GRÁFICO -->
 <section class="grafico-container">
   <canvas id="grafico"></canvas>
 </section>
