@@ -18,15 +18,16 @@ let chart;
 let userAtual = null;
 
 // VERIFICA LOGIN
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "login.html";
-  } else {
-    userAtual = user;
-    carregarDados();
+    return;
   }
-});
 
+  userAtual = user;
+
+  await carregarDados(); // garante execução correta
+});
 // LOGOUT
 document.getElementById("logoutBtn").addEventListener("click", () => {
   signOut(auth);
