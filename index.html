@@ -5,7 +5,6 @@
   <title>Evolução de Pacientes</title>
   <link rel="stylesheet" href="css/style.css">
 
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -18,7 +17,7 @@
 <!-- DASHBOARD -->
 <section class="dashboard">
   <div class="card">
-    <h3>Total Registros</h3>
+    <h3>Total</h3>
     <p id="total">0</p>
   </div>
 
@@ -40,10 +39,8 @@
 
 <!-- FORM -->
 <section class="form-container">
-  <h2>Registrar Evolução</h2>
-
   <form id="formEvolucao">
-    <input type="text" id="paciente" placeholder="Nome do paciente" required>
+    <input type="text" id="paciente" placeholder="Paciente" required>
     <input type="date" id="data" required>
 
     <select id="status">
@@ -51,7 +48,7 @@
       <option value="piora">Piora</option>
     </select>
 
-    <input type="number" id="nota" placeholder="Nota (0 a 10)" min="0" max="10" required>
+    <input type="number" id="nota" min="0" max="10" placeholder="Nota" required>
     <textarea id="obs" placeholder="Observações"></textarea>
 
     <button type="submit">Salvar</button>
@@ -62,15 +59,12 @@
 <section>
   <div class="filtro">
     <input type="text" id="filtroPaciente" placeholder="Buscar paciente...">
-    <button id="btnFiltrar">Filtrar</button>
     <button id="btnLimpar">Limpar</button>
   </div>
 </section>
 
 <!-- TABELA -->
 <section>
-  <h2>Histórico</h2>
-
   <table>
     <thead>
       <tr>
@@ -78,16 +72,24 @@
         <th>Data</th>
         <th>Status</th>
         <th>Nota</th>
-        <th>Observação</th>
+        <th>Obs</th>
       </tr>
     </thead>
     <tbody id="tabelaDados"></tbody>
   </table>
 </section>
 
+<!-- CONTROLE DE PERÍODO -->
+<section>
+  <div class="filtro-periodo">
+    <button onclick="mudarPeriodo('dia')">Diário</button>
+    <button onclick="mudarPeriodo('semana')">Semanal</button>
+    <button onclick="mudarPeriodo('mes')">Mensal</button>
+  </div>
+</section>
+
 <!-- GRÁFICO -->
 <section class="grafico-container">
-  <h2>Gráfico de Evolução</h2>
   <canvas id="grafico"></canvas>
 </section>
 
