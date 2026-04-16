@@ -125,7 +125,6 @@ async function carregarDados() {
   document.getElementById("pioras").innerText = pioras;
 
   atualizarGrafico(labels, valores);
-}
 
 // GRÁFICO
 function atualizarGrafico(labels, valores) {
