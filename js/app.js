@@ -78,7 +78,11 @@ async function carregarDados() {
   let valores = [];
 
   try {
-    const q = query(collection(db, "evolucoes"));
+    const q = query(
+     collection(db, "evolucoes"),
+     where("userId", "==", userAtual.uid),
+     orderBy("data")
+    );
 
     const querySnapshot = await getDocs(q);
 
