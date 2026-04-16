@@ -4,7 +4,6 @@ body {
   margin: 0;
 }
 
-/* HEADER */
 header {
   background: linear-gradient(135deg, #4CAF50, #2e7d32);
   color: white;
@@ -20,7 +19,6 @@ header button {
   border-radius: 8px;
 }
 
-/* DASHBOARD */
 .dashboard {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -35,7 +33,6 @@ header button {
   text-align: center;
 }
 
-/* FORM */
 .form-container {
   margin: 15px;
   background: white;
@@ -49,25 +46,17 @@ form {
   gap: 10px;
 }
 
-input, select, textarea, button {
+input, textarea, button {
   padding: 10px;
   border-radius: 8px;
 }
 
-/* FILTRO */
-.filtro {
+.filtro, .filtro-periodo {
   display: flex;
   gap: 10px;
   margin: 15px;
 }
 
-.filtro-periodo {
-  display: flex;
-  gap: 10px;
-  margin: 15px;
-}
-
-/* TABELA */
 table {
   width: 100%;
   background: white;
@@ -84,7 +73,6 @@ td, th {
   border: 1px solid #ddd;
 }
 
-/* GRÁFICO */
 .grafico-container {
   margin: 15px;
   background: white;
