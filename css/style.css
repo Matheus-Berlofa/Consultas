@@ -105,3 +105,14 @@ th, td {
   padding: 20px;
   border-radius: 15px;
 }
+
+
+.filtro {
+  display: flex;
+  gap: 10px;
+  margin: 20px;
+}
+
+.filtro input {
+  flex: 1;
+}
