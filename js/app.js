@@ -1,22 +1,40 @@
 import { db, auth } from "./firebase.js";
-import { 
-  collection, addDoc, getDocs, query, orderBy, where 
+
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy,
+  where
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+import {
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 let chart;
 let userAtual = null;
 
-// GARANTE USUÁRIO LOGADO
+// VERIFICA LOGIN
 onAuthStateChanged(auth, (user) => {
-  if (user) {
+  if (!user) {
+    window.location.href = "login.html";
+  } else {
     userAtual = user;
     carregarDados();
   }
 });
 
-// SALVAR DADOS COM USER ID
-document.getElementById("formEvolucao").addEventListener("submit", async function(e) {
+// LOGOUT
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  signOut(auth);
+  window.location.href = "login.html";
+});
+
+// SALVAR DADOS
+document.getElementById("formEvolucao").addEventListener("submit", async function (e) {
   e.preventDefault();
 
   const paciente = document.getElementById("paciente").value;
@@ -42,3 +60,76 @@ document.getElementById("formEvolucao").addEventListener("submit", async functio
     alert("Erro: " + erro.message);
   }
 });
+
+// CARREGAR DADOS
+async function carregarDados() {
+  const tabela = document.getElementById("tabelaDados");
+  tabela.innerHTML = "";
+
+  const q = query(
+    collection(db, "evolucoes"),
+    where("userId", "==", userAtual.uid),
+    orderBy("data")
+  );
+
+  const querySnapshot = await getDocs(q);
+
+  let labels = [];
+  let valores = [];
+
+  let total = 0;
+  let soma = 0;
+  let melhoras = 0;
+  let pioras = 0;
+
+  querySnapshot.forEach((doc) => {
+    const d = doc.data();
+
+    tabela.innerHTML += `
+      <tr>
+        <td>${d.paciente}</td>
+        <td>${d.data}</td>
+        <td>${d.status}</td>
+        <td>${d.nota}</td>
+        <td>${d.obs}</td>
+      </tr>
+    `;
+
+    total++;
+    soma += d.nota;
+
+    if (d.status === "melhora") melhoras++;
+    else pioras++;
+
+    labels.push(d.data);
+    valores.push(d.status === "melhora" ? d.nota : -d.nota);
+  });
+
+  // DASHBOARD
+  document.getElementById("total").innerText = total;
+  document.getElementById("media").innerText = total ? (soma / total).toFixed(1) : 0;
+  document.getElementById("melhoras").innerText = melhoras;
+  document.getElementById("pioras").innerText = pioras;
+
+  atualizarGrafico(labels, valores);
+}
+
+// GRÁFICO
+function atualizarGrafico(labels, valores) {
+  const ctx = document.getElementById("grafico").getContext("2d");
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Evolução",
+        data: valores,
+        borderWidth: 2,
+        tension: 0.3
+      }]
+    }
+  });
+}
