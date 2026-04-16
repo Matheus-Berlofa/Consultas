@@ -13,6 +13,14 @@
   <button id="logoutBtn">Sair</button>
 </header>
 
+<!-- SELECT PACIENTE -->
+<section class="paciente-select">
+  <select id="selectPaciente">
+    <option value="">Todos os pacientes</option>
+  </select>
+</section>
+
+<!-- DASHBOARD -->
 <section class="dashboard">
   <div class="card"><h3>Total</h3><p id="total">0</p></div>
   <div class="card"><h3>Média</h3><p id="media">0</p></div>
@@ -20,6 +28,7 @@
   <div class="card"><h3>Pioras</h3><p id="pioras">0</p></div>
 </section>
 
+<!-- FORM -->
 <section class="form-container">
   <form id="formEvolucao">
     <input type="text" id="paciente" placeholder="Paciente" required>
@@ -31,6 +40,7 @@
   </form>
 </section>
 
+<!-- FILTRO -->
 <section>
   <div class="filtro">
     <input type="text" id="filtroPaciente" placeholder="Buscar paciente...">
@@ -38,6 +48,7 @@
   </div>
 </section>
 
+<!-- TABELA -->
 <section>
   <table>
     <thead>
@@ -54,6 +65,7 @@
   </table>
 </section>
 
+<!-- PERÍODO -->
 <section>
   <div class="filtro-periodo">
     <button onclick="mudarPeriodo('dia')">Diário</button>
@@ -62,6 +74,7 @@
   </div>
 </section>
 
+<!-- GRÁFICO -->
 <section class="grafico-container">
   <canvas id="grafico"></canvas>
 </section>
