@@ -17,6 +17,7 @@ import {
 let chart;
 let userAtual = null;
 
+
 // VERIFICA LOGIN
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
@@ -69,6 +70,7 @@ async function carregarDados() {
   const tabela = document.getElementById("tabelaDados");
   tabela.innerHTML = "";
 
+  let filtroAtual = "";
   let total = 0;
   let soma = 0;
   let melhoras = 0;
